@@ -1,0 +1,34 @@
+{application, mas,
+ [{description, "Multi agent system engine"},
+  {vsn, "0.1.0"},
+  {registered,
+    [
+     mas_world,
+     mas_world_broker,
+     mas_population_sup,
+     mas_simulation_sup,
+     mas_simulation
+    ]},
+  {mod, { mas_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    lager
+   ]},
+  {env,
+   [
+    {population_mod, mas_test_population},
+    {population_count, 12},
+    {population_size, 100},
+    {topology, mesh},
+    {migration_probability, 0.0001},
+    {node_migration_probability, 0.00001},
+    {nodes_topology, grid},
+    {measurement_interval, 1000}
+   ]
+  },
+  {modules, []},
+  {maintainers, ["Bartosz Zurkowski"]},
+  {licenses, ["MIT"]},
+  {links, []}
+ ]}.
