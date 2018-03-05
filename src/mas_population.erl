@@ -22,7 +22,8 @@
          terminate/2,
          code_change/3]).
 
--record(state, {module                :: module(),
+-record(state, {population_id         :: integer(),
+                module                :: module(),
                 mod_state             :: mod_state(),
                 agents                :: population(),
                 step                  :: integer(),
@@ -115,7 +116,8 @@ handle_info(make_step, State) ->
                           step = Step + 1,
                           metrics = UpdatedMetrics}};
 handle_info(measure, State) ->
-    #state{module = Mod,
+    #state{population_id = ID,
+           module = Mod,
            mod_state = ModState,
            agents = Agents,
            step = Step,
@@ -126,7 +128,7 @@ handle_info(measure, State) ->
     UpdatedMetrics = update_metric(agents_count, length(Agents), Metrics),
     ClearedMetrics = mas_counter:reset(Metrics),
     ReportMetrics = ModMetrics ++ dict:to_list(UpdatedMetrics),
-    report_metrics(Measurement, Step, ReportMetrics, Agents),
+    report_metrics(Measurement, Step, ID, ReportMetrics),
     schedule_measurement(MeasurementInterval),
     {noreply, State#state{mod_state = NewModState,
                           measurement = Measurement + 1,
@@ -161,7 +163,8 @@ init_state(SP) ->
     InitialAgents = generate_population(Mod, SP, Size),
     {Agents, ModState} = Mod:init(InitialAgents, SP),
     Metrics = mas_counter:new([migrations, agents_count, received_agents]),
-    #state{module = Mod,
+    #state{population_id = erlang:system_time(),
+           module = Mod,
            mod_state = ModState,
            agents = Agents,
            step = 1,
@@ -204,6 +207,7 @@ update_metric(Name, Value, Metrics) ->
 %%------------------------------------------------------------------------------
 %% @private
 %%------------------------------------------------------------------------------
-report_metrics(Measurement, Step, Metrics, Population) ->
-    mas_logger:info("<MEASUREMENT-~p> <STEP-~p> <NODE-~p> ~p ~p",
-                    [Measurement, Step, node(), Metrics, Population]).
+report_metrics(Measurement, Step, ID, Metrics) ->
+    mas_logger:info("<MEASUREMENT-~p> <STEP-~p> <ID-~p-~p> ~p",
+                    [Measurement, Step, ID, node(), Metrics]).
+
